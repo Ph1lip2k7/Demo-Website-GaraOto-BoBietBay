@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Gara Ô tô - GARABOBIETBAY</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+  <!-- MAN HINH DANG NHAP -->
+  <div id="loginOverlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-200">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 text-3xl mb-3">
+          <i class="fa-solid fa-car-wrench"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">GARABOBIETBAY SYSTEM</h2>
+        <p class="text-sm text-slate-500 mt-1">Đăng nhập để truy cập hệ thống quản lý</p>
+      </div>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tài khoản</label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3 top-3 text-slate-400"></i>
+            <input type="text" id="loginUser" required placeholder="Nhập username" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Mật khẩu</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3 top-3 text-slate-400"></i>
+            <input type="password" id="loginPass" required placeholder="Nhập password" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg transition duration-200">
+          <i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng Nhập
+        </button>
+      </form>
+
+      <div class="mt-6 pt-4 border-t text-xs text-slate-500 space-y-1">
+        <p class="font-semibold text-slate-700">Tài khoản mặc định:</p>
+        <p>• <b>Admin:</b> admin / admin</p>
+        <p>• <b>Nhân viên:</b> nhanvien / 123</p>
+        <button onclick="resetDataForce()" class="mt-2 text-blue-600 underline text-[11px]">Bấm vào đây nếu không đăng nhập được (Reset Dữ Liệu Ban Đầu)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="appContainer" class="flex h-screen overflow-hidden hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between p-4 flex-shrink-0">
+      <div>
+        <div class="flex items-center gap-3 text-xl font-bold text-blue-500 mb-6 p-2">
+          <i class="fa-solid fa-car-wrench"></i>
+          <span>GARABOBIETBAY</span>
+        </div>
+
+        <div class="bg-slate-800/80 p-3 rounded-lg mb-6 flex items-center justify-between">
+          <div>
+            <p id="currentUserDisplay" class="font-bold text-sm text-white">Admin</p>
+            <span id="currentRoleDisplay" class="text-[10px] bg-blue-500/20 text-blue-300 font-semibold px-2 py-0.5 rounded uppercase">ADMIN</span>
+          </div>
+          <button onclick="logout()" title="Đăng xuất" class="text-slate-400 hover:text-red-400 transition p-1">
+            <i class="fa-solid fa-power-off text-base"></i>
+          </button>
+        </div>
+
+        <nav class="space-y-1">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn admin-only w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition text-left">
+            <i class="fa-solid fa-chart-pie w-5"></i> Dashboard Tổng Quan
+          </button>
+          <button onclick="switchTab('quote')" id="nav-quote" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition text-left">
+            <i class="fa-solid fa-file-signature w-5"></i> Tiếp Nhận & Báo Giá
+          </button>
+          <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition text-left">
+            <i class="fa-solid fa-boxes-stacked w-5"></i> Quản Lý Kho
+          </button>
+          <button onclick="switchTab('appointments')" id="nav-appointments" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition text-left">
+            <i class="fa-solid fa-calendar-check w-5"></i> Quản Lý Lịch Hẹn
+          </button>
+          <button onclick="switchTab('orders')" id="nav-orders" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition text-left">
+            <i class="fa-solid fa-receipt w-5"></i> Lịch Sử & Hóa Đơn
+          </button>
+          <button onclick="switchTab('users')" id="nav-users" class="nav-btn admin-only w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition text-left">
+            <i class="fa-solid fa-users-gear w-5"></i> Quản Lý Tài Khoản
+          </button>
+        </nav>
+      </div>
+
+      <div class="text-xs text-slate-500 text-center border-t border-slate-800 pt-4">
+        GARABOBIETBAY
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-6">
+
+      <!-- SECTION 0: DASHBOARD (CHỈ ADMIN) -->
+      <section id="sec-dashboard" class="tab-content hidden admin-only">
+        <header class="mb-6">
+          <h1 class="text-2xl font-bold text-slate-900">Dashboard Tổng Quan</h1>
+          <p class="text-sm text-slate-500">Thống kê hoạt động kinh doanh và vận hành gara</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+            <div class="p-3 bg-green-100 text-green-600 rounded-lg text-2xl"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <div>
+              <p class="text-xs text-slate-500 font-semibold uppercase">Tổng Doanh Thu</p>
+              <h3 id="dashRevenue" class="text-xl font-bold text-slate-900">0 VNĐ</h3>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+            <div class="p-3 bg-blue-100 text-blue-600 rounded-lg text-2xl"><i class="fa-solid fa-car"></i></div>
+            <div>
+              <p class="text-xs text-slate-500 font-semibold uppercase">Xe Đang Sửa</p>
+              <h3 id="dashActiveCars" class="text-xl font-bold text-slate-900">0</h3>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+            <div class="p-3 bg-amber-100 text-amber-600 rounded-lg text-2xl"><i class="fa-solid fa-calendar-day"></i></div>
+            <div>
+              <p class="text-xs text-slate-500 font-semibold uppercase">Lịch Hẹn Chờ</p>
+              <h3 id="dashPendingAppts" class="text-xl font-bold text-slate-900">0</h3>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+            <div class="p-3 bg-red-100 text-red-600 rounded-lg text-2xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+              <p class="text-xs text-slate-500 font-semibold uppercase">Phụ Tùng Sắp Hết</p>
+              <h3 id="dashLowStock" class="text-xl font-bold text-slate-900">0</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h2 class="text-lg font-bold mb-4">Lịch Sử Sửa Chữa Mới Nhất</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="border-b bg-slate-50 text-xs font-semibold text-slate-500 uppercase">
+                  <th class="p-3">Mã HĐ</th>
+                  <th class="p-3">Biển Số</th>
+                  <th class="p-3">Khách Hàng</th>
+                  <th class="p-3">Tổng Tiền</th>
+                  <th class="p-3">Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="dashLatestOrders" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 1: BÁO GIÁ -->
+      <section id="sec-quote" class="tab-content hidden">
+        <header class="mb-6">
+          <h1 class="text-2xl font-bold text-slate-900">Tiếp Nhận Xe & Tạo Báo Giá</h1>
+          <p class="text-sm text-slate-500">Lập phiếu tiếp nhận và tính tổng chi phí dịch vụ cho khách hàng</p>
+        </header>
+
+        <form id="quoteForm" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-1 bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+            <h2 class="text-lg font-semibold text-slate-800 border-b pb-2 flex items-center gap-2">
+              <i class="fa-solid fa-user-gear text-blue-600"></i> Thông tin Xe & Khách hàng
+            </h2>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Biển số xe *</label>
+              <input type="text" id="licensePlate" required placeholder="30A-123.45" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase font-bold">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tên khách hàng *</label>
+              <input type="text" id="customerName" required placeholder="Nguyễn Văn A" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Số điện thoại *</label>
+              <input type="tel" id="customerPhone" required placeholder="0901234567" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Dòng xe / Tên xe</label>
+              <input type="text" id="carModel" placeholder="Toyota Camry 2022" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+          </div>
+
+          <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between space-y-4">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-800 border-b pb-2 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-wrench text-blue-600"></i> Chi tiết Báo giá
+              </h2>
+              <div class="flex gap-2 mb-4">
+                <select id="itemSelect" class="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                <button type="button" onclick="addItemToQuote()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                  <i class="fa-solid fa-plus"></i> Thêm
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase">
+                      <th class="p-3">Hạng mục / Phụ tùng</th>
+                      <th class="p-3 text-center">Số lượng</th>
+                      <th class="p-3 text-right">Đơn giá (VNĐ)</th>
+                      <th class="p-3 text-right">Thành tiền</th>
+                      <th class="p-3 text-center">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="quoteTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="border-t pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div class="text-slate-600">
+                Tổng chi phí dự kiến: 
+                <span id="totalAmount" class="text-2xl font-bold text-orange-600 ml-2">0 VNĐ</span>
+              </div>
+              <button type="submit" class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i> Lưu & Xuất Báo Giá
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- SECTION 2: QUẢN LÝ KHO PHỤ TÙNG -->
+      <section id="sec-inventory" class="tab-content hidden">
+        <header class="mb-6 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Quản Lý Kho Phụ Tùng & Dịch Vụ</h1>
+            <p class="text-sm text-slate-500">Danh sách phụ tùng tồn kho và bảng giá dịch vụ</p>
+          </div>
+          <button id="btnAddPart" onclick="togglePartModal(true)" class="admin-only bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Thêm Phụ Tùng / Dịch Vụ
+          </button>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase">
+                <th class="p-4">Mã</th>
+                <th class="p-4">Tên Hạng Mục</th>
+                <th class="p-4">Loại</th>
+                <th class="p-4 text-center">Số Tồn Kho</th>
+                <th class="p-4 text-right">Đơn Giá</th>
+                <th class="p-4 text-center admin-only">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 3: QUẢN LÝ LỊCH HẸN -->
+      <section id="sec-appointments" class="tab-content hidden">
+        <header class="mb-6 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Quản Lý Lịch Hẹn</h1>
+            <p class="text-sm text-slate-500">Danh sách khách hàng đặt lịch bảo dưỡng & sửa chữa</p>
+          </div>
+          <button onclick="toggleApptModal(true)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-calendar-plus"></i> Thêm Lịch Hẹn
+          </button>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase">
+                <th class="p-4">Khách Hàng</th>
+                <th class="p-4">Số Điện Thoại</th>
+                <th class="p-4">Biển Số Xe</th>
+                <th class="p-4">Ngày & Giờ Hẹn</th>
+                <th class="p-4">Dịch Vụ Yêu Cầu</th>
+                <th class="p-4 text-center">Trạng Thái</th>
+                <th class="p-4 text-center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="apptTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 4: HÓA ĐƠN -->
+      <section id="sec-orders" class="tab-content hidden">
+        <header class="mb-6">
+          <h1 class="text-2xl font-bold text-slate-900">Lịch Sử Sửa Chữa & Hóa Đơn</h1>
+          <p class="text-sm text-slate-500">Quản lý các lệnh sửa chữa và trạng thái thanh toán</p>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase">
+                <th class="p-4">Mã Hóa Đơn</th>
+                <th class="p-4">Biển Số Xe</th>
+                <th class="p-4">Khách Hàng</th>
+                <th class="p-4">Ngày Lập</th>
+                <th class="p-4 text-right">Tổng Tiền</th>
+                <th class="p-4 text-center">Trạng Thái</th>
+                <th class="p-4 text-center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 5: QUẢN LÝ TÀI KHOẢN (CHỈ ADMIN) -->
+      <section id="sec-users" class="tab-content hidden admin-only">
+        <header class="mb-6 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Quản Lý Tài Khoản Nhân Viên</h1>
+            <p class="text-sm text-slate-500">Tạo tài khoản và phân quyền cho nhân viên gara</p>
+          </div>
+          <button onclick="toggleUserModal(true)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-user-plus"></i> Thêm Tài Khoản
+          </button>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase">
+                <th class="p-4">Tên Tài Khoản</th>
+                <th class="p-4">Họ và Tên</th>
+                <th class="p-4">Vai Trò (Role)</th>
+                <th class="p-4 text-center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL THÊM PHỤ TÙNG -->
+  <div id="partModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-40">
+    <div class="bg-white rounded-xl w-full max-w-md p-6 space-y-4">
+      <h3 class="text-lg font-bold">Thêm Phụ Tùng / Dịch Vụ Mới</h3>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Tên Hạng Mục *</label>
+        <input type="text" id="newPartName" placeholder="Ví dụ: Lọc gió điều hòa" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Loại Hạng Mục</label>
+        <select id="newPartType" onchange="onPartTypeChange()" class="w-full px-3 py-2 border rounded-lg outline-none">
+          <option value="Part">Phụ tùng (Có tồn kho)</option>
+          <option value="Service">Dịch vụ (Không tồn kho)</option>
+        </select>
+      </div>
+      <div id="stockInputGroup">
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Số Lượng Tồn Kho</label>
+        <input type="text" id="newPartStock" oninput="formatNumberInput(this)" placeholder="0" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Đơn Giá (VNĐ) *</label>
+        <input type="text" id="newPartPrice" oninput="formatNumberInput(this)" placeholder="0" class="w-full px-3 py-2 border rounded-lg outline-none font-bold text-blue-600">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="togglePartModal(false)" class="px-4 py-2 border rounded-lg">Hủy</button>
+        <button onclick="saveNewPart()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">Lưu Vùng Kho</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL THÊM LỊCH HẸN -->
+  <div id="apptModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-40">
+    <div class="bg-white rounded-xl w-full max-w-md p-6 space-y-4">
+      <h3 class="text-lg font-bold">Tạo Lịch Hẹn Sửa Chữa</h3>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Tên Khách Hàng *</label>
+        <input type="text" id="appCustomer" placeholder="Nguyễn Văn A" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Số Điện Thoại *</label>
+        <input type="tel" id="appPhone" placeholder="0901234567" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Biển Số Xe *</label>
+        <input type="text" id="appPlate" placeholder="30A-123.45" class="w-full px-3 py-2 border rounded-lg uppercase font-bold outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Ngày & Giờ Hẹn *</label>
+        <input type="datetime-local" id="appDate" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Dịch Vụ Yêu Cầu</label>
+        <input type="text" id="appService" placeholder="Bảo dưỡng 10.000 km, thay dầu" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="toggleApptModal(false)" class="px-4 py-2 border rounded-lg">Hủy</button>
+        <button onclick="saveAppointment()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">Lưu Lịch Hẹn</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL THÊM TÀI KHOẢN -->
+  <div id="userModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-40">
+    <div class="bg-white rounded-xl w-full max-w-md p-6 space-y-4">
+      <h3 class="text-lg font-bold">Thêm Tài Khoản Nhân Viên</h3>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Username *</label>
+        <input type="text" id="newUsername" placeholder="nhanvien1" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Họ và Tên *</label>
+        <input type="text" id="newFullName" placeholder="Nguyễn Văn B" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Mật Khẩu *</label>
+        <input type="password" id="newPassword" placeholder="******" class="w-full px-3 py-2 border rounded-lg outline-none">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="toggleUserModal(false)" class="px-4 py-2 border rounded-lg">Hủy</button>
+        <button onclick="saveUser()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">Tạo Tài Khoản</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 hidden bg-slate-900 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-3 transition-all z-50">
+    <i class="fa-solid fa-circle-check text-green-400"></i>
+    <span id="toastMsg">Thao tác thành công!</span>
+  </div>
+
+  <script>
+    const defaultData = {
+      users: [
+        { username: "admin", password: "admin", name: "Quản Lý Chuỗi", role: "admin" },
+        { username: "nhanvien", password: "123", name: "Nhân Viên Lễ Tân", role: "staff" }
+      ],
+      items: [
+        { id: "SV01", name: "Thay dầu động cơ", price: 350000, type: "Service", stock: "-" },
+        { id: "SV02", name: "Cân chỉnh thước lái", price: 500000, type: "Service", stock: "-" },
+        { id: "PT01", name: "Lọc dầu Castrol", price: 150000, type: "Part", stock: 25 },
+        { id: "PT02", name: "Bugi Iridium", price: 120000, type: "Part", stock: 4 },
+        { id: "PT03", name: "Má phanh trước", price: 850000, type: "Part", stock: 10 }
+      ],
+      appointments: [
+        { id: "APP-1", customer: "Trần Văn B", phone: "0988123456", plate: "43A-999.88", time: "2026-10-25 09:00", service: "Bảo dưỡng định kỳ", status: "Chờ xác nhận" }
+      ],
+      orders: [
+        { id: "HD-1001", plate: "30A-888.99", customer: "Lê Thị C", phone: "0912345678", date: "18/10/2026", total: 1200000, status: "Đã thanh toán" }
+      ]
+    };
+
+    let currentUser = null;
+    let selectedItems = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initLocalStorage();
+      checkAuth();
+    });
+
+    function initLocalStorage() {
+      // Tự động khôi phục danh sách tài khoản chuẩn nếu chưa có
+      const storedUsers = localStorage.getItem("garapro_users");
+      if (!storedUsers || JSON.parse(storedUsers).length === 0) {
+        localStorage.setItem("garapro_users", JSON.stringify(defaultData.users));
+      }
+      if (!localStorage.getItem("garapro_items")) localStorage.setItem("garapro_items", JSON.stringify(defaultData.items));
+      if (!localStorage.getItem("garapro_appts")) localStorage.setItem("garapro_appts", JSON.stringify(defaultData.appointments));
+      if (!localStorage.getItem("garapro_orders")) localStorage.setItem("garapro_orders", JSON.stringify(defaultData.orders));
+    }
+
+    function resetDataForce() {
+      localStorage.setItem("garapro_users", JSON.stringify(defaultData.users));
+      alert("Đã reset danh sách tài khoản thành công! Bây giờ bạn có thể đăng nhập bằng: admin / admin");
+    }
+
+    /* ---------------- AUTHENTICATION ---------------- */
+    function checkAuth() {
+      const savedUser = sessionStorage.getItem("garapro_session");
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        document.getElementById("loginOverlay").classList.add("hidden");
+        document.getElementById("appContainer").classList.remove("hidden");
+        
+        document.getElementById("currentUserDisplay").innerText = currentUser.name;
+        document.getElementById("currentRoleDisplay").innerText = currentUser.role === "admin" ? "ADMIN" : "NHÂN VIÊN";
+
+        if (currentUser.role === "admin") {
+          document.querySelectorAll(".admin-only").forEach(el => el.classList.remove("hidden"));
+          switchTab('dashboard');
+        } else {
+          document.querySelectorAll(".admin-only").forEach(el => el.classList.add("hidden"));
+          switchTab('quote');
+        }
+
+        renderAllData();
+      } else {
+        document.getElementById("loginOverlay").classList.remove("hidden");
+        document.getElementById("appContainer").classList.add("hidden");
+      }
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const userVal = document.getElementById("loginUser").value.trim().toLowerCase();
+      const passVal = document.getElementById("loginPass").value.trim();
+
+      const users = JSON.parse(localStorage.getItem("garapro_users")) || defaultData.users;
+      const found = users.find(u => u.username.toLowerCase() === userVal && u.password === passVal);
+
+      if (found) {
+        sessionStorage.setItem("garapro_session", JSON.stringify(found));
+        checkAuth();
+        showToast("Đăng nhập thành công!");
+      } else {
+        alert("Tài khoản hoặc mật khẩu không chính xác!");
+      }
+    });
+
+    function logout() {
+      sessionStorage.removeItem("garapro_session");
+      currentUser = null;
+      checkAuth();
+    }
+
+    function renderAllData() {
+      populateSelectOptions();
+      renderDashboard();
+      renderInventory();
+      renderAppointments();
+      renderOrders();
+      renderUsers();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".nav-btn").forEach(el => {
+        el.classList.remove("bg-blue-600", "text-white");
+        el.classList.add("text-slate-400");
+      });
+
+      const sec = document.getElementById(`sec-${tab}`);
+      if (sec) sec.classList.remove("hidden");
+
+      const activeNav = document.getElementById(`nav-${tab}`);
+      if (activeNav) {
+        activeNav.classList.add("bg-blue-600", "text-white");
+        activeNav.classList.remove("text-slate-400");
+      }
+    }
+
+    function formatNumberInput(input) {
+      let value = input.value.replace(/\D/g, "");
+      if (value === "") {
+        input.value = "";
+      } else {
+        input.value = parseInt(value, 10).toLocaleString('vi-VN');
+      }
+    }
+
+    function getUnformattedNumber(valStr) {
+      if (!valStr) return 0;
+      return parseInt(valStr.replace(/\D/g, ""), 10) || 0;
+    }
+
+    /* ---------------- DASHBOARD ---------------- */
+    function renderDashboard() {
+      if (currentUser?.role !== "admin") return;
+
+      const orders = JSON.parse(localStorage.getItem("garapro_orders")) || [];
+      const appts = JSON.parse(localStorage.getItem("garapro_appts")) || [];
+      const items = JSON.parse(localStorage.getItem("garapro_items")) || [];
+
+      const totalRev = orders.filter(o => o.status === 'Đã thanh toán').reduce((sum, o) => sum + o.total, 0);
+      document.getElementById("dashRevenue").innerText = `${totalRev.toLocaleString('vi-VN')} VNĐ`;
+
+      const activeCars = orders.filter(o => o.status === 'Đang sửa chữa').length;
+      document.getElementById("dashActiveCars").innerText = activeCars;
+
+      document.getElementById("dashPendingAppts").innerText = appts.length;
+
+      const lowStock = items.filter(i => i.type === 'Part' && typeof i.stock === 'number' && i.stock < 5).length;
+      document.getElementById("dashLowStock").innerText = lowStock;
+
+      const tbody = document.getElementById("dashLatestOrders");
+      tbody.innerHTML = orders.slice(0, 5).map(o => `
+        <tr>
+          <td class="p-3 font-mono font-bold text-blue-600">${o.id}</td>
+          <td class="p-3 font-bold">${o.plate}</td>
+          <td class="p-3">${o.customer}</td>
+          <td class="p-3 font-bold">${o.total.toLocaleString('vi-VN')} VNĐ</td>
+          <td class="p-3"><span class="px-2 py-0.5 text-xs rounded ${o.status==='Đã thanh toán'?'bg-green-100 text-green-800':'bg-blue-100 text-blue-800'}">${o.status}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    /* ---------------- BÁO GIÁ ---------------- */
+    function populateSelectOptions() {
+      const items = JSON.parse(localStorage.getItem("garapro_items")) || [];
+      const select = document.getElementById("itemSelect");
+      select.innerHTML = items.map(i => `<option value="${i.id}">${i.name} [${i.type === 'Part' ? 'Phụ tùng' : 'Dịch vụ'}] - ${i.price.toLocaleString('vi-VN')} VNĐ</option>`).join("");
+    }
+
+    function addItemToQuote() {
+      const itemId = document.getElementById("itemSelect").value;
+      const items = JSON.parse(localStorage.getItem("garapro_items"));
+      const item = items.find(i => i.id === itemId);
+
+      const existing = selectedItems.find(i => i.id === itemId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        selectedItems.push({ ...item, quantity: 1 });
+      }
+      renderQuoteTable();
+    }
+
+    function updateQuantity(id, change) {
+      const item = selectedItems.find(i => i.id === id);
+      if (item) {
+        item.quantity += change;
+        if (item.quantity <= 0) selectedItems = selectedItems.filter(i => i.id !== id);
+      }
+      renderQuoteTable();
+    }
+
+    function renderQuoteTable() {
+      const tbody = document.getElementById("quoteTableBody");
+      let total = 0;
+      if (selectedItems.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Chưa chọn dịch vụ/phụ tùng nào.</td></tr>`;
+      } else {
+        tbody.innerHTML = selectedItems.map(item => {
+          const itemTotal = item.price * item.quantity;
+          total += itemTotal;
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="p-3 font-medium">${item.name}</td>
+              <td class="p-3 text-center">
+                <button type="button" onclick="updateQuantity('${item.id}', -1)" class="px-2 border rounded">-</button>
+                <span class="px-2 font-bold">${item.quantity}</span>
+                <button type="button" onclick="updateQuantity('${item.id}', 1)" class="px-2 border rounded">+</button>
+              </td>
+              <td class="p-3 text-right">${item.price.toLocaleString('vi-VN')}</td>
+              <td class="p-3 text-right font-semibold">${itemTotal.toLocaleString('vi-VN')}</td>
+              <td class="p-3 text-center">
+                <button type="button" onclick="selectedItems = selectedItems.filter(i=>i.id!=='${item.id}'); renderQuoteTable();" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+              </td>
+            </tr>`;
+        }).join("");
+      }
+      document.getElementById("totalAmount").innerText = `${total.toLocaleString('vi-VN')} VNĐ`;
+    }
+
+    document.getElementById("quoteForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (selectedItems.length === 0) return alert("Vui lòng chọn ít nhất 1 hạng mục!");
+
+      const orders = JSON.parse(localStorage.getItem("garapro_orders")) || [];
+      const newOrder = {
+        id: "HD-" + Date.now().toString().slice(-5),
+        plate: document.getElementById("licensePlate").value.toUpperCase(),
+        customer: document.getElementById("customerName").value,
+        phone: document.getElementById("customerPhone").value,
+        date: new Date().toLocaleDateString('vi-VN'),
+        total: selectedItems.reduce((sum, i) => sum + (i.price * i.quantity), 0),
+        status: "Đang sửa chữa"
+      };
+
+      orders.unshift(newOrder);
+      localStorage.setItem("garapro_orders", JSON.stringify(orders));
+
+      const items = JSON.parse(localStorage.getItem("garapro_items"));
+      selectedItems.forEach(sItem => {
+        const invItem = items.find(i => i.id === sItem.id);
+        if (invItem && invItem.type === 'Part' && typeof invItem.stock === 'number') {
+          invItem.stock = Math.max(0, invItem.stock - sItem.quantity);
+        }
+      });
+      localStorage.setItem("garapro_items", JSON.stringify(items));
+
+      showToast("Lưu báo giá thành công!");
+      document.getElementById("quoteForm").reset();
+      selectedItems = [];
+      renderQuoteTable();
+      renderAllData();
+    });
+
+    /* ---------------- KHO ---------------- */
+    function renderInventory() {
+      const items = JSON.parse(localStorage.getItem("garapro_items")) || [];
+      const isAdmin = currentUser?.role === "admin";
+
+      document.getElementById("inventoryTableBody").innerHTML = items.map(i => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-4 font-mono font-bold">${i.id}</td>
+          <td class="p-4 font-medium">${i.name}</td>
+          <td class="p-4"><span class="px-2 py-1 text-xs rounded ${i.type==='Part'?'bg-amber-100 text-amber-800':'bg-blue-100 text-blue-800'}">${i.type==='Part'?'Phụ tùng':'Dịch vụ'}</span></td>
+          <td class="p-4 text-center font-bold ${i.stock < 5 && i.type==='Part' ? 'text-red-600' : ''}">${i.stock}</td>
+          <td class="p-4 text-right font-semibold text-blue-600">${i.price.toLocaleString('vi-VN')} VNĐ</td>
+          ${isAdmin ? `
+          <td class="p-4 text-center">
+            <button onclick="deleteInventoryItem('${i.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
+          </td>` : ''}
+        </tr>`).join("");
+    }
+
+    function onPartTypeChange() {
+      const type = document.getElementById("newPartType").value;
+      document.getElementById("stockInputGroup").style.display = type === 'Service' ? 'none' : 'block';
+    }
+
+    function togglePartModal(show) {
+      if (currentUser?.role !== "admin") return alert("Chỉ Admin mới có quyền thao tác!");
+      document.getElementById("partModal").classList.toggle("hidden", !show);
+    }
+
+    function saveNewPart() {
+      const name = document.getElementById("newPartName").value.trim();
+      const type = document.getElementById("newPartType").value;
+      const stockVal = getUnformattedNumber(document.getElementById("newPartStock").value);
+      const priceVal = getUnformattedNumber(document.getElementById("newPartPrice").value);
+
+      if(!name || priceVal <= 0) return alert("Vui lòng nhập đầy đủ tên và đơn giá hợp lệ!");
+
+      const items = JSON.parse(localStorage.getItem("garapro_items")) || [];
+      const newId = (type === 'Part' ? 'PT' : 'SV') + (items.length + 1).toString().padStart(2, '0');
+
+      items.push({ 
+        id: newId, 
+        name, 
+        type, 
+        stock: type === 'Part' ? stockVal : "-", 
+        price: priceVal 
+      });
+
+      localStorage.setItem("garapro_items", JSON.stringify(items));
+
+      togglePartModal(false);
+      document.getElementById("newPartName").value = "";
+      document.getElementById("newPartStock").value = "";
+      document.getElementById("newPartPrice").value = "";
+
+      renderAllData();
+      showToast("Thêm phụ tùng/dịch vụ mới thành công!");
+    }
+
+    function deleteInventoryItem(id) {
+      if (currentUser?.role !== "admin") return alert("Bạn không có quyền xóa!");
+      if (!confirm("Bạn có chắc chắn muốn xóa hạng mục này?")) return;
+
+      let items = JSON.parse(localStorage.getItem("garapro_items")) || [];
+      items = items.filter(i => i.id !== id);
+      localStorage.setItem("garapro_items", JSON.stringify(items));
+      renderAllData();
+      showToast("Đã xóa hạng mục khỏi kho!");
+    }
+
+    /* ---------------- LỊCH HẸN ---------------- */
+    function renderAppointments() {
+      const appts = JSON.parse(localStorage.getItem("garapro_appts")) || [];
+      document.getElementById("apptTableBody").innerHTML = appts.map(a => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-4 font-medium">${a.customer}</td>
+          <td class="p-4 text-blue-600 font-medium">${a.phone || '-'}</td>
+          <td class="p-4 font-bold uppercase">${a.plate}</td>
+          <td class="p-4 text-slate-600">${a.time}</td>
+          <td class="p-4">${a.service}</td>
+          <td class="p-4 text-center"><span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">${a.status}</span></td>
+          <td class="p-4 text-center">
+            <button onclick="deleteAppt('${a.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function toggleApptModal(show) {
+      document.getElementById("apptModal").classList.toggle("hidden", !show);
+    }
+
+    function saveAppointment() {
+      const customer = document.getElementById("appCustomer").value.trim();
+      const phone = document.getElementById("appPhone").value.trim();
+      const plate = document.getElementById("appPlate").value.trim();
+      const time = document.getElementById("appDate").value.replace("T", " ");
+      const service = document.getElementById("appService").value.trim();
+
+      if(!customer || !phone || !plate) return alert("Vui lòng điền tên, SĐT và biển số xe!");
+
+      const appts = JSON.parse(localStorage.getItem("garapro_appts")) || [];
+      appts.push({ id: "APP-" + Date.now(), customer, phone, plate, time, service, status: "Đã xác nhận" });
+      localStorage.setItem("garapro_appts", JSON.stringify(appts));
+
+      toggleApptModal(false);
+      document.getElementById("appCustomer").value = "";
+      document.getElementById("appPhone").value = "";
+      document.getElementById("appPlate").value = "";
+      document.getElementById("appService").value = "";
+
+      renderAllData();
+      showToast("Đặt lịch hẹn thành công!");
+    }
+
+    function deleteAppt(id) {
+      if (!confirm("Bạn có chắc muốn hủy lịch hẹn này?")) return;
+      let appts = JSON.parse(localStorage.getItem("garapro_appts")) || [];
+      appts = appts.filter(a => a.id !== id);
+      localStorage.setItem("garapro_appts", JSON.stringify(appts));
+      renderAllData();
+      showToast("Đã hủy lịch hẹn!");
+    }
+
+    /* ---------------- HÓA ĐƠN ---------------- */
+    function renderOrders() {
+      const orders = JSON.parse(localStorage.getItem("garapro_orders")) || [];
+      const tbody = document.getElementById("ordersTableBody");
+      
+      if(orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Chưa có dữ liệu hóa đơn.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = orders.map(o => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-4 font-mono font-bold text-blue-600">${o.id}</td>
+          <td class="p-4 font-bold uppercase">${o.plate}</td>
+          <td class="p-4">${o.customer}</td>
+          <td class="p-4 text-slate-500 text-sm">${o.date}</td>
+          <td class="p-4 text-right font-bold text-orange-600">${o.total.toLocaleString('vi-VN')} VNĐ</td>
+          <td class="p-4 text-center">
+            <span class="px-2 py-1 text-xs rounded ${o.status==='Đã thanh toán'?'bg-green-100 text-green-800':'bg-blue-100 text-blue-800'}">${o.status}</span>
+          </td>
+          <td class="p-4 text-center">
+            ${o.status !== 'Đã thanh toán' ? `<button onclick="payOrder('${o.id}')" class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 font-semibold">Thanh toán</button>` : '<i class="fa-solid fa-check text-green-600"></i>'}
+          </td>
+        </tr>`).join("");
+    }
+
+    function payOrder(id) {
+      const orders = JSON.parse(localStorage.getItem("garapro_orders")) || [];
+      const order = orders.find(o => o.id === id);
+      if(order) {
+        order.status = "Đã thanh toán";
+        localStorage.setItem("garapro_orders", JSON.stringify(orders));
+        renderAllData();
+        showToast("Xác nhận thanh toán thành công!");
+      }
+    }
+
+    /* ---------------- TÀI KHOẢN ---------------- */
+    function renderUsers() {
+      if (currentUser?.role !== "admin") return;
+      const users = JSON.parse(localStorage.getItem("garapro_users")) || [];
+      document.getElementById("usersTableBody").innerHTML = users.map(u => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-4 font-bold text-slate-800">${u.username}</td>
+          <td class="p-4 font-medium">${u.name}</td>
+          <td class="p-4"><span class="px-2 py-1 text-xs rounded ${u.role==='admin'?'bg-purple-100 text-purple-800':'bg-slate-100 text-slate-800'}">${u.role.toUpperCase()}</span></td>
+          <td class="p-4 text-center">
+            ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-xs text-slate-400">Mặc định</span>'}
+          </td>
+        </tr>`).join("");
+    }
+
+    function toggleUserModal(show) {
+      document.getElementById("userModal").classList.toggle("hidden", !show);
+    }
+
+    function saveUser() {
+      const username = document.getElementById("newUsername").value.trim();
+      const name = document.getElementById("newFullName").value.trim();
+      const password = document.getElementById("newPassword").value.trim();
+
+      if(!username || !name || !password) return alert("Vui lòng điền đầy đủ thông tin tài khoản!");
+
+      const users = JSON.parse(localStorage.getItem("garapro_users")) || [];
+      if(users.some(u => u.username === username)) return alert("Tên tài khoản này đã tồn tại!");
+
+      users.push({ username, name, password, role: "staff" });
+      localStorage.setItem("garapro_users", JSON.stringify(users));
+
+      toggleUserModal(false);
+      document.getElementById("newUsername").value = "";
+      document.getElementById("newFullName").value = "";
+      document.getElementById("newPassword").value = "";
+
+      renderUsers();
+      showToast("Tạo tài khoản nhân viên thành công!");
+    }
+
+    function deleteUser(username) {
+      if (!confirm("Bạn có chắc muốn xóa tài khoản này?")) return;
+      let users = JSON.parse(localStorage.getItem("garapro_users")) || [];
+      users = users.filter(u => u.username !== username);
+      localStorage.setItem("garapro_users", JSON.stringify(users));
+      renderUsers();
+      showToast("Đã xóa tài khoản!");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toastMsg").innerText = msg;
+      toast.classList.remove("hidden");
+      setTimeout(() => toast.classList.add("hidden"), 2500);
+    }
+  </script>
+</body>
+</html>
